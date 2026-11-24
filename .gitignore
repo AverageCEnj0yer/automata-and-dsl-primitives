@@ -1,6 +1,5 @@
 # Ignore build directories and generated files
-/build
-Lab*/build/
+build/
 
 # Ignore executables and binaries
 *.exe
@@ -12,6 +11,7 @@ Lab*/build/
 *.a
 *.lib
 test
+dsl_parser
 lfa_project
 
 # Ignore CMake generated files
