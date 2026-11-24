@@ -1,70 +1,81 @@
-# LFA Laboratory Work Repository
+# Automata Theory Primitives & Language Front-Ends (C++17)
 
-This repository contains my laboratory work for the Formal Languages & Finite Automata (LFA) course.
+A collection of from-scratch, zero-dependency C++17 implementations of **formal language theory primitives**, **grammar transformations**, and **recursive-descent front-ends**—built as foundational building blocks toward a full NFA-based **regular expression engine** and a custom **domain-specific language (DSL)**.
 
-## Repository Structure
+## Overview
+
+Each module in this repository isolates a core theoretical or compiler-engineering layer so it can be built, tested, and reasoned about independently:
 
 ```
-LFA sem 4/
-│
-├── Lab1/
-│   ├── CMakeLists.txt
-│   ├── main.cpp
-│   ├── include/
-│   │   ├── finiteAutomaton.cpp
-│   │   ├── finiteAutomaton.h
-│   │   ├── grammar.cpp
-│   │   └── grammar.h
-│   └── build/           # (created automatically, not tracked in git)
-│
-├── README.md            # (this file)
-└── ...                  # (future labs will follow a similar structure)
+Formal Language Primitives                Language Processing Front-Ends
+──────────────────────────                ──────────────────────────────
+automata-and-grammars/                    regex-generator/
+  • Formal Grammars & Chomsky Classifier    • Regex Lexer & Precedence Parser
+  • NFA/DFA & Subset Construction (ε-NFA)   • Polymorphic Regex AST & Sampler
+  • Grammar ↔ Finite Automaton Conversion
+                                          dsl-frontend/
+cnf-normalizer/                             • Typed Imperative DSL Lexer
+  • 6-Stage CFG → CNF Pipeline              • LL(3) Recursive-Descent Parser
+  • Strict CNF Structural Validator         • RAII Polymorphic AST (16 node types)
 ```
 
-- Each lab is in its own folder (e.g., `Lab1/`, `Lab2/`, ...).
-- Source code and headers are inside each lab's folder.
-- Each lab contains its own `CMakeLists.txt` for building.
-- The `build/` directory is for CMake build files and is not tracked by git.
+## Modules
 
-## How to Compile and Run a Lab
+| Module | Summary | Key Algorithms & Patterns | Build |
+| :--- | :--- | :--- | :--- |
+| [`automata-and-grammars/`](./automata-and-grammars/README.md) | Formal grammar & finite automaton primitives | Chomsky hierarchy classification (Types 0–3), NFA simulation, subset construction with ε-closure, Grammar ↔ FA conversion | CMake (C++17) |
+| [`cnf-normalizer/`](./cnf-normalizer/README.md) | Context-Free Grammar to Chomsky Normal Form converter | Fixed-point nullable analysis, BFS unit-production closure, terminal isolation, binarization, dead-symbol pruning, CNF validator | CMake (C++17) |
+| [`regex-generator/`](./regex-generator/README.md) | Regular expression parser, AST, and random string sampler | Lexer, 4-level recursive-descent parser, polymorphic AST (`Literal`, `Sequence`, `Alternation`, `Repeat`), bounded random generation | CMake (C++17) |
+| [`dsl-frontend/`](./dsl-frontend/README.md) | Compiler front-end for a typed imperative mini-language | 36-token scanner, LL(3) lookahead recursive-descent parser, 9-level operator precedence (right-assoc `=` and `^`), `std::unique_ptr` AST | `g++` / `clang++` (C++17) |
 
-1. **Open a terminal and navigate to the lab folder:**
-   ```
-   cd "LFA sem 4/Lab1"
-   ```
-2. **Create a build directory (if it doesn't exist):**
-   ```
-   mkdir -p build
-   cd build
-   ```
-3. **Generate build files with CMake:**
-   ```
-   cmake ..
-   ```
-4. **Build the project:**
-   ```
-   cmake --build .
-   ```
-   Or, if using Makefiles:
-   ```
-   make
-   ```
-5. **Run the program:**
-   ```
-   ./test
-   ```
-   Or, with the custom run target (if available):
-   ```
-   cmake --build . --target run
-   # or
-   make run
-   ```
+## Engineering Highlights
 
-## Notes
-- Repeat the above steps for each lab, changing to the appropriate lab folder (e.g., `Lab2/`, `Lab3/`, etc.).
-- All labs are designed to be cross-platform using CMake.
-- The `build/` directory can be safely deleted and recreated at any time.
+- **Pure C++17 Standard Library** — zero third-party dependencies; relies directly on STL containers, `std::unique_ptr`, `std::string_view`, and `<random>`.
+- **Core CS Algorithms From Scratch** — NFA/ε-NFA to DFA subset construction, Chomsky hierarchy classification, full 6-pass CNF normalization with cycle-safe BFS closure, and LL(3) recursive-descent parsing.
+- **Self-Verifying Entry Points** — assertion-based test suites validate NFA membership (`automata-and-grammars`) and CNF invariants across multiple grammar families (`cnf-normalizer`), while `regex-generator` and `dsl-frontend` include executable test harnesses and sample programs.
 
----
+## Quick Start
 
-**Author:** Gabi (based on the LFA course by Cretu Dumitru, Vasile Drumea, and Irina Cojuhari)
+### Prerequisites
+- A C++17-compliant compiler (`g++`, `clang++`, or MSVC)
+- CMake ≥ 3.10 (for the three CMake-configured modules)
+
+### Building & Running Each Module
+
+**1. Automata & Formal Grammars**
+```bash
+cd automata-and-grammars
+mkdir -p build && cd build
+cmake .. && cmake --build .
+./test
+```
+
+**2. CNF Grammar Normalizer**
+```bash
+cd cnf-normalizer
+mkdir -p build && cd build
+cmake .. && cmake --build .
+./test
+```
+
+**3. Regex AST & String Generator**
+```bash
+cd regex-generator
+mkdir -p build && cd build
+cmake .. && cmake --build .
+./test
+```
+
+**4. DSL Compiler Front-End**
+```bash
+cd dsl-frontend
+g++ -std=c++17 main.cpp lexer.cpp parser.cpp -o dsl_parser
+./dsl_parser sample.txt
+```
+
+## Roadmap
+
+These standalone primitives are designed to converge into two larger systems:
+
+1. **Full Regex Engine** — lower the AST produced by `regex-generator/` into Thompson NFAs using `automata-and-grammars/`, enabling both NFA simulation and DFA compilation via subset construction.
+2. **Complete DSL Toolchain** — extend `dsl-frontend/` with a semantic analysis pass (symbol tables and static type checking), control-flow constructs (`if` / `while`), and a tree-walk interpreter or bytecode backend, plus a CYK parser atop `cnf-normalizer/`.
